@@ -1,0 +1,45 @@
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Cargar datos
+@st.cache
+def load_data():
+    data = pd.read_csv('path_to_your_file.csv')
+    return data
+
+data = load_data()
+
+# Sidebar para filtros
+st.sidebar.header('Filtros')
+year = st.sidebar.slider('Año', int(data['Year'].min()), int(data['Year'].max()), (int(data['Year'].min()), int(data['Year'].max())))
+genre = st.sidebar.multiselect('Género', data['Genre'].unique())
+director = st.sidebar.selectbox('Director', data['Director'].unique())
+rating = st.sidebar.slider('Calificación', float(data['Rating'].min()), float(data['Rating'].max()), (float(data['Rating'].min()), float(data['Rating'].max())))
+
+# Filtrar datos
+data_filtered = data[(data['Year'].between(year[0], year[1])) & (data['Rating'].between(rating[0], rating[1]))]
+if genre:
+    data_filtered = data_filtered[data_filtered['Genre'].isin(genre)]
+if director:
+    data_filtered = data_filtered[data_filtered['Director'] == director]
+
+# Mostrar datos filtrados
+st.write(data_filtered)
+
+# Gráfico de distribución de calificaciones
+fig, ax = plt.subplots()
+sns.histplot(data_filtered['Rating'], bins=10, kde=True, ax=ax)
+ax.set_title('Distribución de Calificaciones')
+st.pyplot(fig)
+
+# Gráfico de ingresos por año
+fig, ax = plt.subplots()
+sns.lineplot(data=data_filtered, x='Year', y='Revenue (Millions)', ax=ax)
+ax.set_title('Ingresos por Año')
+st.pyplot(fig)
+
+# Ejecutar la aplicación
+if __name__ == '__main__':
+    st.run()
